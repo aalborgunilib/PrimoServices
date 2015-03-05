@@ -1,0 +1,61 @@
+# This is the main configuration file of your Dancer app
+# env-related settings should go to environments/$env.yml
+# all the settings in this file will be loaded at Dancer's startup.
+
+# Your application's name
+appname: "PrimoServices (PREAS2)"
+
+# when the charset is set to UTF-8 Dancer will handle for you
+# all the magic of encoding and decoding. You should not care
+# about unicode within your app when this setting is set (recommended).
+charset: "UTF-8"
+
+# Caching options
+caching:
+   chi_driver: 'File'
+   # use the Null driver to globally disable the caching algorithm
+   #chi_driver: 'Null'
+   chi_root_dir: '/tmp/chi-driver-file'
+   chi_depth: 2
+   default_expires_in: '5 minutes'
+
+http_async:
+   # Maximum number of parallel web service requests
+   slots: 30
+   # global time-out in seconds for web services - will drop a request if requests
+   # takes longer than this
+   max_request_time: 5
+   # Our user agent (please preserve the (gzip) part)
+   user_agent: 'PrimoServices http://my-domain/primo (gzip)'
+
+primo:
+   api: 'http://my-primo-server:1701'
+   x_search_full: '/PrimoWebServices/xservice/search/full'
+   x_search_brief: '/PrimoWebServices/xservice/search/brief'
+   institution: 'INST'
+
+sfx:
+   base_url: 'http://my-sfx-server/sfxlcl41'
+   rsi_api: 'http://my-sfx-server/sfxlcl41/cgi/core/rsi/rsi.cgi'
+   rfr_id: 'info:sid/my-primo-server:PrimoServices'
+
+google_books:
+   api: 'https://www.googleapis.com/books/v1/volumes'
+   password: 'APIKEY FROM GOOGLE DEVELOPERS CONSOLE'
+   country: 'DK'
+
+journaltocs:
+   api: 'http://www.journaltocs.ac.uk/api/journals/'
+   password: 'REGISTERED EMAIL FROM JOURNALTOCS.AC.UK'
+   deeplink: 'http://www.journaltocs.ac.uk/index.php?action=tocs&issn='
+
+engines:
+   JSON:
+      canonical: 1
+      pretty: 0
+
+plack_middlewares:
+   -
+      - ETag
+   -
+      - ConditionalGET
