@@ -1,0 +1,153 @@
+#!/bin/tcsh
+# http://j.shirley.im/tech/perl/start_server.html
+
+### IMPORTANT APP CONFIGURATION ###
+set APP_NAME=PrimoServices
+set APP_PATH=/u1/apps/production/PrimoServices
+set APP_INSTANCE=prod1
+set WORKERS=40
+###                             ###
+
+setenv PLACK_ENV production
+setenv PERLBREW_ROOT /u1/perl
+
+if ( ! -d $PERLBREW_ROOT && ! -e $PERLBREW_ROOT/etc/cshrc ) then
+	echo "Perlbrew not found. Exiting ..."
+	exit 1
+endif
+
+source $PERLBREW_ROOT/etc/cshrc
+perlbrew use perl-5.18.2
+
+
+if ( ! -d $APP_PATH ) then
+	echo "App path not found: $APP_PATH. Exiting ..."
+	exit 1
+endif
+
+# Add ./perl5/lib/perl5 to PERL5LIB if exists (locally installed dependencies)
+if ( -d "$APP_PATH/perl5/lib/perl5" ) then
+	setenv PERL5LIB "$APP_PATH/perl5/lib/perl5"
+endif
+
+# Use local or global start_server
+if ( -f "$APP_PATH/perl5/bin/start_server" ) then
+	set DAEMON="$APP_PATH/perl5/bin/start_server"
+else
+	# get from default path
+	set DAEMON=start_server
+endif
+
+# Use local or global starman
+if ( -f "$APP_PATH/perl5/bin/starman" ) then
+	set SERVER="$APP_PATH/perl5/bin/starman"
+else
+	# get from default path
+	set SERVER=starman
+endif
+
+set PID="$APP_PATH/$APP_NAME.pid"
+set STATUS="$APP_PATH/$APP_NAME.status"
+set DAEMON_OPTS="--pid-file=$PID --status-file=$STATUS"
+
+set SOCKET="/tmp/starman_$APP_NAME-$APP_INSTANCE.sock"
+set ERROR_LOG="$APP_PATH/logs/$APP_NAME.error.log"
+
+switch ($1)
+case start:
+	# stop already running daemons
+	if ( -e $PID ) then
+		$0 stop
+		sleep 5
+		# cleanup if it is leftovers from a crash
+		if ( -e $PID ) then
+			rm -f $PID
+		endif
+		if ( -e $STATUS ) then
+			rm -f $STATUS
+		endif
+	endif
+
+	echo "Starting: $APP_NAME"
+
+	# start daemon
+	$DAEMON $DAEMON_OPTS -- $SERVER --listen $SOCKET --workers $WORKERS --error-log $ERROR_LOG $APP_PATH/bin/app.pl &
+
+	sleep 3
+	chmod 666 $SOCKET
+
+	breaksw
+
+case stop:
+	if ( -e $PID ) then
+		echo "Stopping: $APP_NAME"
+		kill -TERM `cat $PID`
+		sleep 2
+	endif
+	breaksw
+
+case restart:
+	if ( -e $PID ) then
+		echo "Restarting: $APP_NAME"
+		$0 stop
+		$0 start
+		exit 0
+	else
+		$0 start
+		exit 0
+	endif
+	breaksw
+
+case update:
+	set PWD = `pwd`
+	cd $APP_PATH
+	fossil update
+	cd $PWD
+	$0 restart
+	breaksw
+
+case installdeps:
+	set PWD = `pwd`
+	cd $APP_PATH
+	cpanm -L perl5 --installdeps .
+	cd $PWD
+	breaksw
+
+case status:
+	echo "Server process(es) for: $APP_NAME"
+	if ( -e $STATUS ) then
+		cat $STATUS
+	else
+		echo "Not running!"
+	endif
+	breaksw
+
+case server-status:
+	$APP_PATH/perl5/bin/server-status --scoreboard $APP_PATH/server-status --counter $APP_PATH/server-status/counter
+	breaksw
+
+case development:
+	if ( -e $STATUS ) then
+		$0 restart
+	endif
+
+	if ( $2 != '' ) then
+		set PORT=$2
+	else
+		set PORT=8080
+	endif
+
+	setenv PLACK_ENV development
+	set WATCH_FOLDERS='./lib,config.yml'
+	
+	plackup -R $WATCH_FOLDERS --server Starman --host `hostname` --port $PORT bin/app.pl
+
+	breaksw
+
+default:
+	echo "Usage: $0 {start|stop|restart|update|installdeps|status|server-status|development}"
+	exit 1
+
+endsw
+
+exit 0

@@ -8,6 +8,7 @@ requires 'Starman';
 requires 'Test::More';
 requires 'YAML';
 requires 'Plack::Middleware::ETag';
+requires 'Plack::Middleware::ServerStatus::Lite';
 # Application dependencies
 requires 'Benchmark';
 requires 'CHI';
