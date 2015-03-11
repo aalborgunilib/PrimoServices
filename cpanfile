@@ -7,7 +7,7 @@ requires 'Server::Starter',
 requires 'Starman';
 requires 'Test::More';
 requires 'YAML';
-requires 'Plack::Middleware::ETag';
+requires 'Plack::Middleware::Deflater';
 requires 'Plack::Middleware::ServerStatus::Lite';
 # Application dependencies
 requires 'Benchmark';
