@@ -53,9 +53,3 @@ engines:
    JSON:
       canonical: 1
       pretty: 0
-
-plack_middlewares:
-   -
-      - ETag
-   -
-      - ConditionalGET
