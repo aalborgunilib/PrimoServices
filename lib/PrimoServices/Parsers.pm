@@ -110,8 +110,22 @@ sub parse_frbg {
 		}
 
 		my @uniqDates = List::MoreUtils::uniq(sort @dates);
-		$values{yearsRange} = put_years_in_order(@uniqDates);
+		
 		$values{years} = join(", ", @uniqDates);
+
+		# Check if the returned years are "pure"
+		if ( grep(/^\d{4}$/, @uniqDates) ) {
+			$values{yearsRange} = put_years_in_order(@uniqDates);
+		}
+		# If we are getting e.g. year ranges back from frbr groups
+		else {
+			$values{yearsRange} = $values{years};
+		}
+
+		# Make compact date ranges: 19xx-yy but not past millennia
+		$values{yearsRange} =~ s{(?<=18\d\d-)(18)(\d\d)}{$2}g;
+		$values{yearsRange} =~ s{(?<=19\d\d-)(19)(\d\d)}{$2}g;
+		$values{yearsRange} =~ s{(?<=20\d\d-)(20)(\d\d)}{$2}g;
 	}
 	catch {
 		# JSON was malformed so we cannot tell the number of hits
