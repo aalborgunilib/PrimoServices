@@ -59,23 +59,6 @@ sub parse_record {
 		$values{metadata}{issue} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{spage});
 
 		$values{metadata}{atitle} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{atitle});
-
-		my $holdings = get_as_array($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{display}{lds01});
-		
-		my ($online, $paper);
-		if ( $holdings->[0] ) {
-			$online = join(', ', sort grep(/^oa:/, @$holdings));
-			$paper = join(', ', sort grep(/^pe:/, @$holdings));
-		}
-		if ( $paper ) {
-			$paper =~ s/pe://g;
-			$values{holdings}{paper} = $paper;
-		}
-		if ( $online ) {
-			$online =~ s/oa://g;
-			$values{holdings}{online} = $online;
-		}
-
 	}
 	catch {
 		# JSON was malformed so we cannot tell the number of hits
