@@ -9,7 +9,7 @@ use Benchmark(':hireswallclock');
 
 # http://semver.org/
 # X.Y.Z (Major.Minor.Patch)
-use version; our $VERSION = version->declare("v2.2.0");
+use version; our $VERSION = version->declare("v2.2.1");
 
 #
 # Route handlers
