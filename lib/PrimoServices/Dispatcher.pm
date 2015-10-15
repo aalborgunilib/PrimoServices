@@ -20,7 +20,6 @@ my $uid = $ENV{LOGNAME} || $ENV{USER} || getpwuid($<);
 my $cache = CHI->new(
 	namespace => __PACKAGE__,
 	driver => config->{caching}{chi_driver},
-	#driver => 'Null',
 	root_dir => config->{caching}{chi_root_dir} . '_' . $uid,
 	depth => config->{caching}{chi_depth},
 	expires_in => config->{caching}{default_expires_in},
@@ -208,7 +207,7 @@ sub request_webservices {
 		if ( $id =~ m {
 			# Primo Central records are prefixed by 'TN_'
 			^TN_}sxm ) {
-			push @items, { id => $id, primoStatus => 'Not a local record' };
+			push @items, { id => $id, primoStatus => 'Not a local record', error=> '0' };
 			next;
 		}
 

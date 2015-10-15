@@ -40,25 +40,32 @@ sub parse_record {
 		$json = JSON::XS->new->utf8->decode($$content_ref);
 		
 		$values{id} = $id;
-		$values{primoStatus} = 'OK';
 
-		$values{metadata}{isbn} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{isbn});
-		$values{metadata}{'@isbn'} = get_as_array($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{isbn});
-		$values{metadata}{issn} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{issn});
-		$values{metadata}{'@issn'} = get_as_array($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{issn});
-		
-		$values{delcategory} = get_as_array($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{delivery}{delcategory});
-		@{$values{delcategory}} = List::MoreUtils::apply { s/(^\$\$V|\$\$O.*$)//g } @{$values{delcategory}} if @{$values{delcategory}}[0];
-		@{$values{delcategory}} = List::MoreUtils::uniq @{$values{delcategory}} if @{$values{delcategory}}[1];
+		if ( $json->{SEGMENTS}{JAGROOT}{RESULT}{ERROR}{'@MESSAGE'} ) {
+			$values{primoStatus} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{ERROR}{'@MESSAGE'});
+			$values{error} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{ERROR}{'@CODE'});
+		}
+		else {
+			$values{primoStatus} = 'OK';
 
-		$values{type} = $json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{display}{type};
-		$values{availability} = $json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{LIBRARIES};
-		$values{metadata}{date} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{date});
-		$values{metadata}{volume} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{volume});
-		$values{metadata}{issue} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{issue});
-		$values{metadata}{issue} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{spage});
+			$values{metadata}{isbn} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{isbn});
+			$values{metadata}{'@isbn'} = get_as_array($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{isbn});
+			$values{metadata}{issn} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{issn});
+			$values{metadata}{'@issn'} = get_as_array($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{issn});
+			
+			$values{delcategory} = get_as_array($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{delivery}{delcategory});
+			@{$values{delcategory}} = List::MoreUtils::apply { s/(^\$\$V|\$\$O.*$)//g } @{$values{delcategory}} if @{$values{delcategory}}[0];
+			@{$values{delcategory}} = List::MoreUtils::uniq @{$values{delcategory}} if @{$values{delcategory}}[1];
 
-		$values{metadata}{atitle} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{atitle});
+			$values{type} = $json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{display}{type};
+			$values{availability} = $json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{LIBRARIES};
+			$values{metadata}{date} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{date});
+			$values{metadata}{volume} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{volume});
+			$values{metadata}{issue} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{issue});
+			$values{metadata}{issue} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{spage});
+
+			$values{metadata}{atitle} = get_as_scalar($json->{SEGMENTS}{JAGROOT}{RESULT}{DOCSET}{DOC}{PrimoNMBib}{record}{addata}{atitle});
+		}
 	}
 	catch {
 		# JSON was malformed so we cannot tell the number of hits
@@ -248,7 +255,8 @@ sub parse_rsi {
 			}sxmi ) {
 
 		# Get SFX Object ID
-		my $sfx_object_id = $1 if ( $$content_ref =~ m{
+		my $sfx_object_id;
+		$sfx_object_id = $1 if ( $$content_ref =~ m{
 			<OBJECT_ID>(\d+?)</OBJECT_ID>
 			}sxmi );
 
