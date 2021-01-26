@@ -1,3 +1,5 @@
+Project has been archived as it is no longer relevant for user interface enhancements for ExLibris Primo. Technology has fortunately moved on...
+
 # PrimoServices
 Primo Result Extender Aggregator Service 2 (PREAS2): User interface enhancement web service for ExLibris Primo.
 
